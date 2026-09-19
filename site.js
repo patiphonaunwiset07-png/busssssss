@@ -14,6 +14,32 @@ $('#year').textContent=new Date().getFullYear()+543;
 $('#menu').onclick=()=>$('#navlinks').classList.toggle('open');
 document.querySelectorAll('.navlinks a').forEach(a=>a.onclick=()=>$('#navlinks').classList.remove('open'));
 
+// language toggle (lightweight bilingual UI chrome)
+const i18nEN={nav_journey:'Journey',nav_projects:'Projects',nav_professional:'Experience',nav_documents:'Documents',nav_skills:'Skills',nav_contact:'Contact',nav_admin:'Admin',hero_cta:'View all projects',hero_contact:'Contact',projects_title:'Projects & Experience',contact_send:'Send message'};
+let lang=localStorage.getItem('portfolio_lang')||'th';
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    if(!el.dataset.th)el.dataset.th=el.textContent;
+    el.textContent=lang==='en'?(i18nEN[el.dataset.i18n]||el.dataset.th):el.dataset.th;
+  });
+  $('#langToggle').textContent=lang==='en'?'TH':'EN';
+}
+$('#langToggle').onclick=()=>{lang=lang==='en'?'th':'en';localStorage.setItem('portfolio_lang',lang);applyLang()};
+applyLang();
+
+// dark mode toggle
+let theme=localStorage.getItem('portfolio_theme')||'light';
+function applyTheme(){document.documentElement.setAttribute('data-theme',theme);$('#themeToggle').textContent=theme==='dark'?'☀':'🌙'}
+$('#themeToggle').onclick=()=>{theme=theme==='dark'?'light':'dark';localStorage.setItem('portfolio_theme',theme);applyTheme()};
+applyTheme();
+
+function showSkeleton(show){$('#skeletonWrap').classList.toggle('hidden',!show);$('#mainContent').classList.toggle('hidden',show)}
+
+async function trackEvent(type,project_id=null){
+  if(!sb)return;
+  try{await sb.from('analytics_events').insert({type,project_id})}catch(e){/* table may not exist yet, ignore */}
+}
+
 async function load(){
   let d=demo;
   if(sb){
@@ -29,6 +55,7 @@ async function load(){
     if(!rs.some(x=>x.error))d={profile:rs[0].data,projects:rs[1].data||[],skills:rs[2].data||[],practicums:rs[3].data||[],documents:rs[4].data||[],reflections:rs[5].data||[],settings:rs[6].data};
   }
   render(d);
+  trackEvent('page_view');
 }
 
 function empty(text){return`<div class="empty">${text}</div>`}
@@ -38,13 +65,21 @@ function tagRow(items){return items.length?`<div class="tagRow">${items.map(x=>`
 function render(d){
   const p=d.profile,s=d.settings||demo.settings;
   profile=p;
+  showSkeleton(false);
   document.documentElement.style.setProperty('--blue',s.primary_color||'#1769d2');
   document.title=`${s.site_title||'4-Year Portfolio'} — ${p.name_en}`;
   document.querySelectorAll('.logo').forEach(x=>x.textContent=(s.logo_text||'PA').slice(0,3));
   $('#heroBadge').textContent=s.hero_badge||'Computer Education · University Portfolio';
   $('#heroCta').textContent=s.hero_cta_text||'ดูผลงานทั้งหมด';
   $('#footerText').textContent=(s.footer_text||'© {year} Patiphon Aunwiset · 4-Year Digital Portfolio').replaceAll('{year}',String(new Date().getFullYear()+543));
-  document.querySelector('meta[name="description"]').content=s.seo_description||p.intro;
+  const desc=s.seo_description||p.intro||'';
+  document.querySelector('#metaDescription').content=desc;
+  const pageUrl=location.origin+location.pathname;
+  $('#ogTitle').content=document.title;$('#ogDescription').content=desc;
+  $('#twTitle').content=document.title;$('#twDescription').content=desc;
+  $('#ogUrl').content=pageUrl;
+  const ogImg=s.og_image_url||p.photo_url||'';
+  if(ogImg){$('#ogImage').content=encodeURI(new URL(ogImg,pageUrl).href);$('#twImage').content=encodeURI(new URL(ogImg,pageUrl).href)}
   if(p.resume_url){$('#heroResume').href=esc(p.resume_url);$('#heroResume').classList.remove('hidden')}else{$('#heroResume').classList.add('hidden')}
   if(s.maintenance_mode){document.body.classList.add('maintenanceMode');document.querySelector('main').innerHTML=`<section><div class="wrap empty"><h2>เว็บไซต์อยู่ระหว่างปรับปรุง</h2><p>${esc(s.maintenance_message||'กรุณากลับมาอีกครั้งภายหลัง')}</p></div></section>`;return}
   $('#journey').classList.toggle('hidden',s.show_journey===false);
@@ -66,6 +101,7 @@ function render(d){
   const labels=['พื้นฐานและการปรับตัว','ต่อยอดทักษะและโครงงาน','ประสบการณ์วิชาชีพ','สรุปการเติบโตและฝึกสอน'];
   $('#years').innerHTML=labels.map((x,i)=>`<article class="yearCard"><b>0${i+1}</b><span>ชั้นปีที่ ${i+1}</span><p>${x}</p><small>${projects.filter(v=>v.academic_year===i+1).length} ผลงาน</small></article>`).join('');
   buildSkillFilterOptions();
+  renderFeatured();
   applyFilters();
   $('#skillGrid').innerHTML=d.skills.map(x=>`<article class="card"><div class="skillTop"><b>${esc(x.name)}</b><span>${esc(x.group_name)} · ${x.level}%</span></div><div class="bar"><i style="width:${+x.level}%"></i></div></article>`).join('')||empty('ยังไม่มีข้อมูลทักษะ');
   $('#practicumGrid').innerHTML=d.practicums.map(x=>`<article class="card project"><div class="cover" ${x.cover_url?`style="background-image:url('${encodeURI(x.cover_url)}')"`:''}>${x.cover_url?'':'EDU'}</div><div class="projectBody"><span class="badge">ปี ${x.academic_year} · ${esc(x.type)}</span><h3>${esc(x.title)}</h3><p><b>${esc(x.organization)}</b></p><p>${esc(x.description)}</p>${x.evidence_url?`<a href="${esc(x.evidence_url)}" target="_blank" rel="noopener">ดูหลักฐาน →</a>`:''}</div></article>`).join('')||empty('ยังไม่มีข้อมูลฝึกสอนหรือฝึกงาน');
@@ -75,6 +111,9 @@ function render(d){
   maybeOpenFromHash();
 }
 
+function projectCard(x){
+  return `<article class="card project" data-open="${x.id}"><div class="cover" ${x.cover_url?`style="background-image:url('${encodeURI(x.cover_url)}')"`:''}>${x.cover_url?'':'0'+x.academic_year}</div><div class="projectBody"><span class="badge">ปี ${x.academic_year} · ${esc(x.category)}</span><h3>${esc(x.title)}</h3><p>${esc(x.summary)}</p>${tagRow(toArr(x.skills).slice(0,3))}<a data-open="${x.id}">ดูรายละเอียด →</a></div></article>`;
+}
 function buildSkillFilterOptions(){
   const set=new Set();
   projects.forEach(x=>toArr(x.skills).forEach(s=>set.add(s)));
@@ -102,15 +141,20 @@ function applyFilters(){
     }
     return true;
   });
-  $('#projectGrid').innerHTML=a.map(x=>`<article class="card project" data-open="${x.id}"><div class="cover" ${x.cover_url?`style="background-image:url('${encodeURI(x.cover_url)}')"`:''}>${x.cover_url?'':'0'+x.academic_year}</div><div class="projectBody"><span class="badge">ปี ${x.academic_year} · ${esc(x.category)}</span><h3>${esc(x.title)}</h3><p>${esc(x.summary)}</p>${tagRow(toArr(x.skills).slice(0,3))}<a data-open="${x.id}">ดูรายละเอียด →</a></div></article>`).join('')||empty('ยังไม่มีผลงานตรงกับเงื่อนไขที่เลือก');
+  $('#projectGrid').innerHTML=a.map(projectCard).join('')||empty('ยังไม่มีผลงานตรงกับเงื่อนไขที่เลือก');
   $('#resultCount').textContent=`พบ ${a.length} ผลงาน`;
+}
+function renderFeatured(){
+  const featured=projects.filter(x=>x.featured);
+  if(featured.length){$('#featuredWrap').classList.remove('hidden');$('#featuredGrid').innerHTML=featured.map(projectCard).join('')}
+  else{$('#featuredWrap').classList.add('hidden')}
 }
 
 $('#yearFilters').onclick=e=>{if(!e.target.dataset.year)return;document.querySelectorAll('.filters button').forEach(x=>x.classList.toggle('active',x===e.target));applyFilters()};
 ['searchInput'].forEach(id=>$('#'+id).addEventListener('input',applyFilters));
 ['categoryFilter','semesterFilter','skillFilter','featuredFilter'].forEach(id=>$('#'+id).addEventListener('change',applyFilters));
 
-$('#projectGrid').addEventListener('click',e=>{
+document.addEventListener('click',e=>{
   const id=e.target.closest('[data-open]')?.dataset.open;
   if(id)openDetail(id);
 });
@@ -139,6 +183,7 @@ function openDetail(id){
     </div>`;
   $('#detailOverlay').classList.add('open');
   history.replaceState(null,'','#project-'+x.id);
+  trackEvent('project_view',x.id);
 }
 function closeDetail(){$('#detailOverlay').classList.remove('open');history.replaceState(null,'','#projects')}
 $('#detailClose').onclick=closeDetail;
@@ -167,12 +212,21 @@ $('#copyLinkBtn').onclick=async()=>{
   catch{$('#shareLink').select();document.execCommand('copy')}
 };
 
+const formLoadedAt=Date.now();
 $('#contactForm').onsubmit=async e=>{
   e.preventDefault();
   const out=$('#formStatus');
+  const fd=new FormData(e.target);
+  if(fd.get('website')){
+    // honeypot triggered — pretend success, do not actually send
+    out.className='ok';out.textContent='ส่งข้อความเรียบร้อย ขอบคุณครับ';
+    e.target.reset();return;
+  }
+  if(Date.now()-formLoadedAt<2500){out.className='error';out.textContent='กรุณาลองส่งใหม่อีกครั้ง';return}
   if(!sb){out.className='error';out.textContent='กรุณาตั้งค่า Supabase ก่อนใช้งาน';return}
   out.textContent='กำลังส่ง…';
-  const{error}=await sb.from('messages').insert(Object.fromEntries(new FormData(e.target)));
+  const payload=Object.fromEntries(fd);delete payload.website;
+  const{error}=await sb.from('messages').insert(payload);
   out.className=error?'error':'ok';
   out.textContent=error?error.message:'ส่งข้อความเรียบร้อย ขอบคุณครับ';
   if(!error)e.target.reset();
