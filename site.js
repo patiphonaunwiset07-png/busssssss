@@ -1,8 +1,20 @@
 import { SUPABASE_URL, SUPABASE_ANON_KEY, CONFIGURED } from './config.js';
-let createClient;if(CONFIGURED)({createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'));
+let createClient=null;
+let sb=null;
+async function initSupabase(){
+ if(sb||!CONFIGURED)return sb;
+ try{
+  const mod=await Promise.race([
+   import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'),
+   new Promise((_,rej)=>setTimeout(()=>rej(new Error('Supabase client timeout')),6000))
+  ]);
+  createClient=mod.createClient;
+  sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+ }catch(err){console.warn('[Portfolio OS] Supabase unavailable, using demo data.',err)}
+ return sb;
+}
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeUrl=u=>{try{const x=new URL(u,location.href);return ['https:','http:','mailto:'].includes(x.protocol)?x.href:'#'}catch{return'#'}};
-const sb=CONFIGURED?createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
 let projects=[],profile={},siteData={},currentMode=localStorage.getItem('portfolio_mode')||'recruiter',presentationIndex=0,commandIndex=0;
 const sessionId=localStorage.getItem('portfolio_session')||(crypto?.randomUUID?crypto.randomUUID():String(Date.now()));localStorage.setItem('portfolio_session',sessionId);
 
@@ -41,21 +53,49 @@ async function trackEvent(type,project_id=null){
 }
 
 async function load(){
- let d=demo;
- if(sb){
+ // Render immediately from local demo data so the site never stays on the skeleton
+ // while Supabase/network/schema problems are being resolved.
+ siteData=demo;
+ render(demo);
+ showSkeleton(false);
+ 
+ if(!CONFIGURED)return;
+ const client=await initSupabase();
+ if(!client)return;
+ 
+ try{
   const queries=[
-   sb.from('public_profile').select('*').eq('id',1).single(),
-   sb.from('projects').select('*').eq('published',true).order('academic_year').order('sort_order'),
-   sb.from('skills').select('*').eq('published',true).order('sort_order'),
-   sb.from('practicums').select('*').eq('published',true).order('academic_year').order('sort_order'),
-   sb.from('documents').select('*').eq('published',true).order('sort_order'),
-   sb.from('reflections').select('*').eq('published',true).order('academic_year').order('semester'),
-   sb.from('site_settings').select('*').eq('id',1).single()
+   client.from('public_profile').select('*').eq('id',1).single(),
+   client.from('projects').select('*').eq('published',true).order('academic_year').order('sort_order'),
+   client.from('skills').select('*').eq('published',true).order('sort_order'),
+   client.from('practicums').select('*').eq('published',true).order('academic_year').order('sort_order'),
+   client.from('documents').select('*').eq('published',true).order('sort_order'),
+   client.from('reflections').select('*').eq('published',true).order('academic_year').order('semester'),
+   client.from('site_settings').select('*').eq('id',1).single()
   ];
-  const rs=await Promise.all(queries);
-  if(rs[0].data&&rs[6].data){d={profile:rs[0].data,projects:rs[1].error?[]:rs[1].data||[],skills:rs[2].error?[]:rs[2].data||[],practicums:rs[3].error?[]:rs[3].data||[],documents:rs[4].error?[]:rs[4].data||[],reflections:rs[5].error?[]:rs[5].data||[],settings:rs[6].data};}
+  const rs=await Promise.race([
+   Promise.all(queries),
+   new Promise((_,rej)=>setTimeout(()=>rej(new Error('Supabase data timeout')),7000))
+  ]);
+  if(rs[0]?.data && rs[6]?.data){
+   const d={
+    profile:rs[0].data,
+    projects:rs[1]?.error?demo.projects:(rs[1]?.data||[]),
+    skills:rs[2]?.error?demo.skills:(rs[2]?.data||[]),
+    practicums:rs[3]?.error?demo.practicums:(rs[3]?.data||[]),
+    documents:rs[4]?.error?demo.documents:(rs[4]?.data||[]),
+    reflections:rs[5]?.error?demo.reflections:(rs[5]?.data||[]),
+    settings:rs[6].data
+   };
+   siteData=d;
+   render(d);
+  }else{
+   console.warn('[Portfolio OS] Public profile/site settings are not ready. Keeping demo data.',rs.map(x=>x?.error).filter(Boolean));
+  }
+ }catch(err){
+  console.warn('[Portfolio OS] Supabase load failed. Keeping demo data.',err);
  }
- siteData=d;render(d);showSkeleton(false);trackEvent('page_view');
+ trackEvent('page_view');
 }
 
 function healthScore(d){
