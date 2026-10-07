@@ -56,7 +56,7 @@ async function load(){
  // Render immediately from local demo data so the site never stays on the skeleton
  // while Supabase/network/schema problems are being resolved.
  siteData=demo;
- render(demo);
+ try{render(demo)}catch(err){console.warn('[Portfolio OS] render error (demo), showing page anyway.',err)}
  showSkeleton(false);
  
  if(!CONFIGURED)return;
@@ -88,7 +88,7 @@ async function load(){
     settings:rs[6].data
    };
    siteData=d;
-   render(d);
+   try{render(d)}catch(err){console.warn('[Portfolio OS] render error (live data). Keeping demo render.',err)}
   }else{
    console.warn('[Portfolio OS] Public profile/site settings are not ready. Keeping demo data.',rs.map(x=>x?.error).filter(Boolean));
   }
@@ -103,12 +103,12 @@ function healthScore(d){
  let score=45;score+=p.photo_url?8:0;score+=p.resume_url?8:0;score+=p.bio?6:0;score+=p.email?4:0;score+=Math.min(15,d.projects.length*3);score+=Math.min(8,d.skills.length*2);score+=d.documents.length?4:0;score+=s.seo_description?4:0;score+=counts.filter(x=>x>0).length;return Math.min(100,score);
 }
 function setMeta(d){
- const p=d.profile,s=d.settings||{};document.documentElement.style.setProperty('--blue',s.primary_color||'#1769d2');document.title=`${s.site_title||'4-Year Portfolio'} — ${p.name_en}`;$$('.logo').forEach(x=>x.textContent=(s.logo_text||'PA').slice(0,3));$('#heroBadge').textContent=s.hero_badge||'Computer Education · University Portfolio';$('#heroCta').textContent=s.hero_cta_text||'ดูผลงานทั้งหมด';$('#footerText').textContent=(s.footer_text||'© {year} Patiphon Aunwiset · Portfolio OS').replaceAll('{year}',String(new Date().getFullYear()+543));
+ const p=d.profile,s=d.settings||{};document.documentElement.style.setProperty('--blue',s.primary_color||'#1769d2');document.title=`${s.site_title||'4-Year Portfolio'} — ${p.name_en}`;$$('.logo').forEach(x=>x.textContent=(s.logo_text||'PA').slice(0,3));$('#heroBadge').textContent=s.hero_badge||'Computer Education · University Portfolio';$('#heroCta').textContent=s.hero_cta_text||'ดูผลงานทั้งหมด';$('#footerText').innerHTML=esc(s.footer_text||'© {year} Patiphon Aunwiset · Portfolio OS').replaceAll('{year}',String(new Date().getFullYear()+543));
  const desc=s.seo_description||p.intro||'';$('#metaDescription').content=desc;const pageUrl=location.href.split('#')[0];$('#ogTitle').content=document.title;$('#ogDescription').content=desc;$('#twTitle').content=document.title;$('#twDescription').content=desc;$('#ogUrl').content=pageUrl;const img=s.og_image_url||p.photo_url||'';if(img){const u=safeUrl(img);$('#ogImage').content=u;$('#twImage').content=u}
 }
 
 function render(d){
- const p=d.profile,s=d.settings||demo.settings;profile=p;projects=d.projects||[];setMeta(d);$('#year').textContent=new Date().getFullYear()+543;
+ const p=d.profile,s=d.settings||demo.settings;profile=p;projects=d.projects||[];setMeta(d);const yearEl=$('#year');if(yearEl)yearEl.textContent=new Date().getFullYear()+543;
  const score=healthScore(d);$('#healthScoreHero').textContent=score;$('#projectCount').textContent=projects.length;$('#topProjectCount').textContent=projects.length;$('#skillCount').textContent=(d.skills||[]).length;$('#topSkillLabel').textContent=(d.skills?.slice().sort((a,b)=>(b.level||0)-(a.level||0))[0]?.name)||'Skill Map';$('#yearNow').textContent=Math.max(1,Math.min(4,new Date().getFullYear()-(p.start_year||new Date().getFullYear())+1));
  $('#name').firstChild.nodeValue=p.name_th||'';$('#nameEn').textContent=p.name_en||'';$('#headline').textContent=p.headline||'';$('#intro').textContent=p.intro||'';$('#bio').textContent=p.bio||'';
  if(p.photo_url){$('#portrait').style.backgroundImage=`url("${encodeURI(p.photo_url)}")`;$('#portrait span').style.display='none'}
