@@ -1,0 +1,170 @@
+/* Stable responsive layouts: mobile / tablet / desktop. Keep vertical scrolling. */
+html{scrollbar-gutter:stable;scroll-behavior:auto}
+body{min-width:0;width:100%;margin:0}
+*,*::before,*::after{animation:none!important;transition:none!important}
+img,video,canvas,svg{max-width:100%}
+img,video{height:auto}
+button,input,select,textarea{max-width:100%}
+input,select,textarea{min-width:0}
+h1,h2,h3,h4,p,a,span,small,strong,td,th{overflow-wrap:anywhere}
+.wrap{max-width:1120px}
+.heroGrid,.quickGrid,.aboutGrid,.contactGrid,.years,.projectGrid,.skillGrid,.insightGrid,.overviewGrid,.analyticsGrid,.metricGrid,.formGrid{min-width:0}
+.heroGrid>*,.quickGrid>*,.aboutGrid>*,.contactGrid>*,.years>*,.projectGrid>*,.skillGrid>*,.insightGrid>*,.overviewGrid>*,.analyticsGrid>*,.metricGrid>*,.formGrid>*{min-width:0}
+.heroGrid{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr)}
+.projectGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.skillGrid,.aboutGrid,.contactGrid,.formGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.heroVisual{width:100%;min-width:0;max-width:520px;justify-self:center}
+.portrait{width:100%;aspect-ratio:4/5;background-position:center}
+.heroGridDots{inset:10% 0 0 15%}
+.floatingMetric{right:12px;bottom:24px}
+.actions,.filters,.tagRow,.stats,.heroKicker,.searchRow,.shareSocial,.rowActions{flex-wrap:wrap;min-width:0}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.statLink{min-width:0;padding:0}
+.statLink span{display:block}
+.searchRow>input{flex:1 1 260px;min-width:0}
+.searchRow>select{flex:1 1 160px;min-width:0}
+.featuredToggle{flex:1 1 180px}
+.filters button,.menu,.sideNav button,.adminMenuToggle{min-height:44px}
+.statCard:hover,.metricCard:hover,.projectCard:hover,.yearCard:hover,.quickCard:hover,.insightCard:hover,.button:hover{transform:none!important}
+#siteHeader nav.wrap{max-width:1600px;width:calc(100% - 48px);gap:16px}
+#siteHeader .brand{flex-shrink:0;min-width:0}
+#siteHeader .navlinks{gap:12px;min-width:0}
+#siteHeader .navlinks a{font-size:14px}
+#siteHeader .navlinks .button{padding:10px 12px;white-space:nowrap}
+#siteHeader .menu{flex-shrink:0}
+body:has(.modal.open){overflow:hidden}
+.modal{padding:16px}
+.dialog{width:min(760px,100%);min-width:0;max-height:calc(100dvh - 32px);overflow:auto;overscroll-behavior:contain}
+.dialogTop{gap:12px;align-items:flex-start;min-width:0}
+.dialogTop h2{min-width:0;margin-top:0}
+.dialogTop button{flex-shrink:0}
+.copyRow,.commandHead{min-width:0}
+.copyRow input,.commandHead input{min-width:0;flex:1}
+.presentationShell{width:min(1120px,100%);height:calc(100dvh - 32px);max-height:900px;grid-template-rows:minmax(0,1fr) auto;min-width:0}
+.presentationSlide{overflow:auto;padding:64px 48px 32px;align-content:start;min-height:0;min-width:0}
+.presentationSlide h2{font-size:clamp(32px,6vw,80px);line-height:1.15}
+.presentationNav{gap:12px}
+.presentationNav .button{width:auto;min-width:0;flex:1}
+.presentationClose{width:44px;height:44px}
+.tableWrap{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+.tableWrap table{width:100%}
+.adminShell{grid-template-columns:248px minmax(0,1fr)}
+.adminMain,.sidebar,.panel,.settingsForm,.settingsCard,.adminHero,.adminHealth{min-width:0}
+.adminMain{padding:0}
+.sideNav button{overflow-wrap:anywhere}
+.sidebar{overflow-x:hidden}
+.adminTop,.cardHead,.settingsBar,.filterBar{flex-wrap:wrap;min-width:0}
+.adminHero{grid-template-columns:minmax(0,1fr) minmax(220px,.38fr)}
+.adminBody .metricGrid{grid-template-columns:repeat(6,minmax(0,1fr))}
+.loginView{min-height:100svh}
+.loginStage{min-width:0;grid-template-columns:minmax(0,1fr) minmax(0,440px)}
+.loginCard{min-width:0}
+.loginHeading h2{font-size:clamp(26px,5vw,32px)}
+.loginOptions{flex-wrap:wrap}
+.loginStatus,.loginFoot{overflow-wrap:anywhere}
+.resumeToolbar{flex-wrap:wrap;align-items:center}
+.resumeHead{position:static;flex-wrap:wrap;min-width:0}
+.resumeHead>div{min-width:0;flex:1 1 220px}
+.resumeDoc{width:min(760px,calc(100% - 48px));overflow-wrap:anywhere}
+.resumePhoto{flex-shrink:0;object-fit:cover}
+@media(max-width:1440px){
+ #siteHeader .menu{display:flex;margin-left:auto}
+ #siteHeader .navlinks{display:none;position:absolute;top:72px;left:0;right:0;padding:16px 24px;background:var(--white);border-bottom:1px solid var(--line);flex-direction:column;align-items:stretch;margin:0;gap:8px;max-height:calc(100dvh - 72px);overflow-y:auto;overscroll-behavior:contain}
+ #siteHeader .navlinks.open{display:flex}
+ #siteHeader .navlinks>a:not(.button){display:flex;align-items:center;min-height:44px;padding:8px 12px}
+ .maintenanceMode #siteHeader .navlinks{position:absolute;display:none!important;width:auto;flex-direction:column}
+ .maintenanceMode #siteHeader .navlinks.open{display:flex!important}
+}
+@media(min-width:1441px){#siteHeader .navlinks{display:flex!important;position:static}.menu{display:none!important}}
+@media(max-width:1100px){
+ .heroGrid{gap:32px;grid-template-columns:minmax(0,1fr) minmax(0,.8fr)}
+ .adminBody .metricGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .adminShell{grid-template-columns:220px minmax(0,1fr)}
+ .adminHero{grid-template-columns:minmax(0,1fr)}
+ #panel-overview>.overviewGrid{grid-template-columns:minmax(0,1fr)}
+ .loginStage{grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:32px}
+}
+@media(max-width:920px){
+ .heroGrid,.contactGrid,.aboutGrid{grid-template-columns:minmax(0,1fr)}
+ .heroVisual{margin:0 auto}
+ .years,.projectGrid,.skillGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .adminShell{grid-template-columns:minmax(0,1fr);grid-template-areas:'nav' 'main'}
+ .sidebar{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;height:auto;max-height:none}
+ .sidebar .brand{margin:0;padding:0;min-width:0}
+ .sidebar .brand>span:last-child{min-width:0}
+ .sidebar .adminMenuToggle{position:static;width:auto;min-width:88px;display:flex;gap:12px}
+ .sidebar .sideNav{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr));min-width:0}
+ .adminTop{padding:20px}
+ #panel-overview.active,#panel-overview>.overviewGrid,.overviewGrid,.analyticsGrid{grid-template-columns:minmax(0,1fr)}
+ .loginStage{grid-template-columns:minmax(0,440px);justify-content:center;gap:24px}
+ .loginIntro{display:none}
+ .loginView{padding:24px}
+ .loginBack{left:24px;top:16px}
+}
+@media(max-width:620px){
+ .wrap{width:calc(100% - 32px)}
+ #siteHeader nav.wrap{width:calc(100% - 32px)}
+ #siteHeader .brand{flex-shrink:1;font-size:14px;gap:8px}
+ #siteHeader .brand small{font-size:9px}
+ #siteHeader .logo{flex-shrink:0}
+ .hero h1{font-size:clamp(32px,9vw,42px)}
+ .hero h1 span{font-size:clamp(18px,5vw,24px)}
+ .years,.projectGrid,.skillGrid,.aboutGrid,.contactGrid,.formGrid{grid-template-columns:minmax(0,1fr)}
+ .full{grid-column:auto}
+ .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+ .heroGrid{gap:32px}
+ .portrait{border-width:12px;border-radius:20px}
+ .floatingMetric{right:8px;bottom:16px;padding:12px;max-width:calc(100% - 16px)}
+ .actions{gap:8px}
+ .actions .button{width:100%;min-width:0}
+ .searchRow{align-items:stretch;flex-direction:column}
+ .searchRow>input,.searchRow>select,.featuredToggle{width:100%;flex:auto}
+ .adminBody .metricGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .sidebar .sideNav{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .sidebar .brand small{font-size:9px}
+ .sidebar .logo{width:36px;height:36px;flex-shrink:0}
+ .adminShell{padding:12px;gap:12px}
+ .adminBody .adminCard,.adminBody .settingsCard{padding:16px}
+ .adminHero{padding:20px}
+ .adminHero h1{font-size:28px}
+ .settingsBar .button{width:100%}
+ .dialog{padding:20px}
+ .dialogTop h2{font-size:22px}
+ .presentationSlide{padding:64px 20px 20px}
+ .presentationLead{font-size:18px}
+ .presentationSlide h2{font-size:32px}
+ .presentationStats span{border-radius:8px}
+ .loginView{padding:16px}
+ .loginStage{margin-top:68px}
+ .loginBack{left:16px}
+ .premiumCard{padding:24px}
+ .resumeToolbar{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+ .resumeDoc{width:calc(100% - 32px);padding:24px}
+ .resumeHead h1{font-size:26px}
+ .resumeItem b,.resumeItem span{display:block}
+}
+@media(max-width:360px){
+ .premiumCard{padding:20px}
+ .premiumCard .brand{font-size:16px}
+ .premiumCard .brand small{font-size:8px}
+ .loginOptions{align-items:flex-start}
+ .adminBody .metricGrid{gap:8px}
+ .adminBody .metricCard{padding:12px}
+ .sidebar{padding:12px!important;gap:8px}
+ .sidebar .brand{font-size:14px;gap:8px}
+ .sidebar .adminMenuToggle{min-width:72px;padding:8px}
+}
+@media(max-height:500px) and (orientation:landscape){
+ .loginView{justify-content:flex-start}
+ .loginStage{margin-top:64px;margin-bottom:12px}
+ .dialog{max-height:calc(100dvh - 24px)}
+ .modal{padding:12px}
+ .presentationShell{height:calc(100dvh - 24px)}
+}
+@media print{html{scrollbar-gutter:auto}body{width:auto}.resumeDoc{width:100%;max-width:none;padding:0;margin:0;box-shadow:none}.resumeToolbar{display:none!important}}
+/* Match legacy search-field specificity; column flex must not turn width into height. */
+.searchRow input[type="search"]{min-width:0;flex:1 1 260px}
+.searchRow .featuredToggle input[type="checkbox"]{width:18px;height:18px;min-width:18px;flex:0 0 18px;margin:0}
+.featuredToggle{white-space:normal}
+.project:hover,.yearCard:hover,.quickCard:hover,.statLink:hover{transform:none!important}
+@media(max-width:620px){.searchRow input[type="search"]{flex:0 0 auto;min-height:48px;height:48px;width:100%}.searchRow>select{height:48px}.searchRow .featuredToggle{justify-content:flex-start;min-height:44px;gap:8px}.searchRow .featuredToggle input[type="checkbox"]{width:18px;max-width:18px}.filters{gap:8px}.filters button{padding:8px 12px}}

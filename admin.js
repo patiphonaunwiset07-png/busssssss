@@ -8,7 +8,26 @@ const field=(n,l,t='text',v='')=>{const isBool=t==='boolean';return `<label clas
 const empty=t=>`<div class="empty">${esc(t)}</div>`;
 const health=d=>{const p=d.profile||{},s=d.settings||{};let n=45;n+=p.photo_url?8:0;n+=p.resume_url?8:0;n+=p.bio?6:0;n+=p.email?4:0;n+=Math.min(15,d.projects.length*3);n+=Math.min(8,d.skills.length*2);n+=d.documents.length?4:0;n+=s.seo_description?4:0;n+=[d.projects,d.skills,d.documents,d.practicums,d.reflections].filter(a=>a.length>0).length;return Math.min(100,n)};
 async function boot(){if(!sb)return;const{data:{session}}=await sb.auth.getSession();if(session)showDashboard()}
-$('#loginForm').onsubmit=async e=>{e.preventDefault();if(!sb){$('#loginStatus').textContent='กรุณาตั้งค่า Supabase ใน config.js';return}const f=Object.fromEntries(new FormData(e.target)),r=await sb.auth.signInWithPassword(f);if(r.error){$('#loginStatus').className='error';$('#loginStatus').textContent=r.error.message;return}const claim=await sb.rpc('claim_profile');if(claim.error){await sb.auth.signOut();$('#loginStatus').className='error';$('#loginStatus').textContent=claim.error.message;return}showDashboard()};
+$('#loginForm').onsubmit=async e=>{
+ e.preventDefault();const status=$('#loginStatus'),button=$('#loginSubmit');status.className='loginStatus';
+ if(!sb){status.textContent='กรุณาตั้งค่า Supabase ใน config.js';return}
+ button.disabled=true;button.firstElementChild.textContent='กำลังเข้าสู่ระบบ…';status.textContent='';
+ try {
+ const fields=new FormData(e.target);const r=await sb.auth.signInWithPassword({email:String(fields.get('email')).trim(),password:String(fields.get('password'))});
+ if(r.error)throw r.error;
+ const claim=await sb.rpc('claim_profile');if(claim.error){await sb.auth.signOut();throw claim.error}
+ await showDashboard();
+ }catch(error){status.className='loginStatus error';status.textContent=error.message||'เชื่อมต่อไม่สำเร็จ กรุณาลองอีกครั้ง'}
+ finally{button.disabled=false;button.firstElementChild.textContent='เข้าสู่ระบบ'}
+};
+$('#forgotPassword').onclick=async()=>{
+ const input=$('#loginEmail'),status=$('#loginStatus'),button=$('#forgotPassword');
+ if(!input.value||!input.checkValidity()){input.reportValidity();input.focus();return}
+ if(!sb){status.textContent='กรุณาตั้งค่า Supabase ใน config.js';return}
+ button.disabled=true;status.textContent='กำลังส่งลิงก์ตั้งรหัสผ่านใหม่…';
+ try{const {error}=await sb.auth.resetPasswordForEmail(input.value.trim(),{redirectTo:new URL('reset-password.html',location.href).href});if(error)throw error;status.className='loginStatus';status.textContent='หากมีบัญชีนี้ในระบบ คุณจะได้รับลิงก์ทางอีเมล'}
+ catch(error){status.className='loginStatus error';status.textContent=error.message||'ส่งไม่สำเร็จ กรุณาลองอีกครั้ง'}finally{button.disabled=false}
+};
 async function showDashboard(){$('#login').classList.add('hidden');$('#dashboard').classList.remove('hidden');await load()}
 $('#logout').onclick=async()=>{await sb.auth.signOut();location.reload()};$('#adminMenuToggle').onclick=()=>$('.sidebar').classList.toggle('menuOpen');
 function goPanel(name){$$('.panel').forEach(x=>x.classList.toggle('active',x.id==='panel-'+name));$$('.sideNav button').forEach(x=>x.classList.toggle('active',x.dataset.panel===name));if(innerWidth<=920) $('.sidebar').classList.remove('menuOpen')}
